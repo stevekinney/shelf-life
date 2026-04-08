@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+:root {
+	--color-canvas: #f6f1e7;
+	--color-surface: #fffdf8;
+	--color-surface-soft: #efe5d2;
+	--color-border: #d4c3a3;
+	--color-border-strong: #a88d5e;
+	--color-ink: #1c1914;
+	--color-muted: #5f5648;
+	--color-accent: #815f2b;
+	--color-accent-strong: #6a4b1f;
+	--color-success: #1f6a46;
+	--shadow-card: 0 18px 40px rgba(36, 26, 14, 0.08);
+	--page-gutter: clamp(1.25rem, 3vw, 2.5rem);
+	--page-width: 76rem;
+	--radius-card: 1.5rem;
+	--font-sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	--font-display: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+}
+
+html {
+	background: var(--color-canvas);
+	color: var(--color-ink);
+}
+
+body {
+	min-height: 100vh;
+	background:
+		radial-gradient(circle at top, rgba(255, 255, 255, 0.85), transparent 33%),
+		linear-gradient(180deg, #f6f1e7 0%, #efe7d8 100%);
+	color: var(--color-ink);
+	font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-display);
+	letter-spacing: -0.03em;
+}
+
+::selection {
+	background: rgba(129, 95, 43, 0.18);
+}
+
+a {
+	color: inherit;
+}
+
+button,
+input,
+textarea {
+	font: inherit;
+}
+
+.font-display {
+	font-family: var(--font-display);
+}

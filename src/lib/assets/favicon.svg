@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+	<title>Shelf favicon</title>
+	<rect width="64" height="64" rx="16" fill="#143c3d" />
+	<path
+		d="M16 16.5A4.5 4.5 0 0 1 20.5 12H27v38h-6.5A4.5 4.5 0 0 1 16 45.5z"
+		fill="#d9734e"
+	/>
+	<path
+		d="M28.5 13.5A3.5 3.5 0 0 1 32 10h6.5v40H32a3.5 3.5 0 0 1-3.5-3.5z"
+		fill="#f2b35d"
+	/>
+	<path
+		d="M40 14.5A4.5 4.5 0 0 1 44.5 10H48v40h-3.5A4.5 4.5 0 0 1 40 45.5z"
+		fill="#f6f1e7"
+	/>
+	<path
+		d="M14 50.5c0-1.1.9-2 2-2h32c1.1 0 2 .9 2 2v1c0 1.1-.9 2-2 2H16c-1.1 0-2-.9-2-2z"
+		fill="#f6f1e7"
+		opacity=".85"
+	/>
+</svg>
