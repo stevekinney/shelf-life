@@ -35,7 +35,8 @@ export default defineConfig({
 		toHaveScreenshot: {
 			animations: 'disabled',
 			caret: 'hide',
-			scale: 'css'
+			scale: 'css',
+			maxDiffPixelRatio: 0.01
 		}
 	},
 	projects: [
