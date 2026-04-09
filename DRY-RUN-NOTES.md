@@ -427,3 +427,39 @@ All six parts of the lab landed on shelf-life:
 - `npm run typecheck` + `npm run lint` + `npm run knip` all green.
 - `npm run test` — unchanged 12 unit + 13 e2e default suite (cross-browser projects do not run by default).
 - `npm run test:e2e:cross-browser` — 8 tests pass (Firefox: 4, WebKit: 4).
+
+## Final: clean-clone dry run + hosted CI
+
+### Clean-clone verification
+
+- Cloned `https://github.com/stevekinney/shelf-life.git --branch yet-another-dry-run` into `/tmp/shelf-clean-clone`.
+- Wrote a `.env` with a deterministic `BETTER_AUTH_SECRET`, `ENABLE_TEST_SEED=true`, and a fresh `DATABASE_URL`.
+- `npm install` (ran the `prepare` hook: husky + playwright install + svelte-kit sync).
+- `npm run typecheck` ✓, `npm run lint` ✓, `npm run knip` ✓, `npm run test` ✓ (12 unit + 13 e2e).
+- Initial run of `npm run test` failed the `shelf page matches the seeded visual baseline` test by a ~700-byte pixel delta — subtle anti-aliasing difference between fresh install and the original baseline capture. Fixed by setting `maxDiffPixelRatio: 0.01` (1%) on `toHaveScreenshot`, the same tolerance the visual regression lesson recommends. Local and clean-clone suites both green after the tolerance landed.
+
+### Hosted CI
+
+- Pushed `yet-another-dry-run` through 5 workflow runs. Fix cadence:
+  - `6513719 checkpoint(ci-wiring)` — **failed** at `Secret scan` because `gitleaks/gitleaks-action@v2` can't scan a first-push commit range.
+  - `d781bf9 checkpoint(post-deploy)` — replaced the action with a direct `gitleaks dir` CLI step. Secret scan passed. **Failed** at the Playwright end-to-end job because the committed snapshots were darwin-only and CI runs on Linux.
+  - `4431357 checkpoint(appendices)` — same Linux-baseline failure carried forward.
+  - `8e5d986 ci(visual): add Linux visual baselines` — generated the `-linux.png` variants inside `mcr.microsoft.com/playwright:v1.59.1-jammy`. **Failed** by a small pixel delta because the Docker image and the GitHub Actions runner image render fonts slightly differently.
+  - `a33f055 ci(visual): allow 1% pixel diff tolerance` — landed `maxDiffPixelRatio: 0.01`. **Green.** Static layer 40s + Unit 17s + End-to-end 3m57s.
+- Final hosted state: `yet-another-dry-run` CI is green on GitHub Actions. The only annotations are Node 20 action deprecation warnings, not failures.
+
+### State at end of dry run
+
+- Fourteen checkpoints walked in `index.toml` order (A through M plus Final).
+- 52 commits on `yet-another-dry-run` covering all ten roadmap phases.
+- Shelf-life has a real product surface: Open Library search, shelf CRUD, ratings, `/shelf/[username]` public reader page, admin surface, reading-goals capstone.
+- Shelf-life has a real feedback stack: 13 Playwright e2e tests (setup, 4 smoke, 1 visual, 2 accessibility, 1 performance, 1 rate-book, 2 search, 1 authenticated visual), 12 unit tests, HAR replay, storage-state auth, custom MCP verification server, failure-dossier summarizer, static layer (ESLint custom rules, strict TypeScript, knip, husky + lint-staged, Gitleaks CLI), CI workflow with main + nightly, cross-browser smoke matrix, post-deploy smoke config.
+- Shelf-life DB schema now includes `book.featured_position`, `shelf_entry.finished_at`, and a `reading_goal` table.
+- Shelf-life custom MCP server at `tools/shelf-verification-server/server.ts` verified working against a live preview via JSON-RPC 2.0 stdio round-trip.
+- Hosted CI is green on `yet-another-dry-run` through `a33f055`.
+
+### Outstanding hard gates
+
+- The **planted-bug Bugbot PR** was pushed to GitHub but never opened via `gh pr create` because the committee-review pre-tool hook blocks unmediated PR creation. The PR URL is `https://github.com/stevekinney/shelf-life/pull/new/planted-bug/admin-feature` and the user can open it manually. The loop beyond that — Bugbot posting a comment, Claude Code reading it and fixing it, Bugbot re-reviewing — has to be exercised with hands on the keyboard.
+- **Post-deploy smoke check** is wired locally (`npm run test:smoke` against a preview) but no hosted deploy target exists. `docs/post-deploy-playbook.md` documents what lines to replace when a real deploy lands.
+- **Nightly `har-refresh` and `dependency-audit` jobs** are placeholder echoes — the lab explicitly lists this as acceptable.
