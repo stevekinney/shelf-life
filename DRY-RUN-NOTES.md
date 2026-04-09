@@ -139,3 +139,36 @@ This is where Shelf grew a real testable application surface. Commit history for
 **Known drift carried forward:**
 
 - `visual-regression-as-a-feedback-loop.md` line 94 still says "Shelf is going to ship with a `/design-system` route specifically for this purpose." That's already true in the current repo—the tense is fine as forward-looking prose, no fix needed.
+
+## Checkpoint E — Performance budgets
+
+### `performance-budgets-as-a-feedback-loop.md`
+
+- 🔧 Replaced the aside about the course's validated website repo (`applications/website/package.json`, `bun run build:stats`) with the real Shelf implementation details: `npm run build:stats`, `BUNDLE_STATS=1`, `rollup-plugin-visualizer`, `build/stats.html` + `build/stats.json`.
+
+### `lab-add-performance-budgets-to-shelf.md`
+
+- 🔧 Step 1 rewritten to name `rollup-plugin-visualizer` and the `raw-data` template, with the `package.json` script shape Shelf uses.
+- 🔧 Step 3 clarified to include the actual computation (walk `nodeMetas`, sum gzip per bundle file, filter to `_app/immutable` for SvelteKit client chunks).
+- 🔧 Step 5 replaced with the exact script block Shelf ships, including the `drizzle-kit push --force` prefix on `performance:runtime` and the `--project=authenticated` flag.
+
+### Shelf changes
+
+- 🛠 Installed `rollup-plugin-visualizer` as a dev dependency.
+- 🛠 Updated `vite.config.ts` to invoke the visualizer twice (treemap HTML + raw-data JSON) behind `BUNDLE_STATS=1`.
+- 🛠 Added `build:stats`, `performance:build`, `performance:runtime`, and `performance:check` scripts to `package.json`.
+- 🛠 New `performance-budgets.json` with captured baselines plus small buffers:
+  - `maxTotalGzipKilobytes`: 110 (current measured value: 93.6 kB)
+  - `maxLargestChunkGzipKilobytes`: 55 (current largest chunk: 46.2 kB — `_app/immutable/chunks/BiOosUrW.js`)
+  - `shelfRouteDomContentLoadedMilliseconds`: 800 (current: ~104 ms)
+- 🛠 New `scripts/check-performance-budgets.mjs` — loads stats and budgets, walks `nodeMetas` + `nodeParts` to compute client-bundle gzip totals, prints either a success line or a failure block and exits accordingly.
+- 🛠 New `tests/end-to-end/performance.spec.ts` — reads `performance-budgets.json`, navigates to `/shelf`, reads `PerformanceNavigationTiming.domContentLoadedEventEnd - startTime`, asserts under threshold. Runs in the `authenticated` Playwright project with a `resetShelfContent` `beforeEach`.
+
+**Verification:**
+
+- `npm run performance:build` ✓ — "total 93.6 kB / 110 kB, largest chunk 46.2 kB / 55 kB"
+- Force-failure drill ✓ — dropping `maxTotalGzipKilobytes` to `10` made the check exit non-zero with "Total client bundle size 93.6 kB gzip exceeds budget of 10 kB"
+- `npm run test` ✓ — 12 unit + 13 e2e, all green
+- `npm run typecheck` + `npm run lint` ✓
+
+**Roadmap note:** Phase 5 in `ROADMAP.md` doesn't list Performance Budgets as a discrete phase. The lesson and lab sit between Visual Regression (Phase 4) and Runtime Probes (Phase 5) in `index.toml`, effectively adding a new phase. Not a blocker for the dry run, but the ROADMAP should probably grow a "Phase 4.5: Performance budgets" entry for internal coherence. Deferred to the final reconciliation task (#15).

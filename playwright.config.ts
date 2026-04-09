@@ -43,7 +43,7 @@ export default defineConfig({
 		},
 		{
 			name: 'authenticated',
-			testMatch: /(rate-book|accessibility|search|visual-authenticated)\.spec\.ts/,
+			testMatch: /(rate-book|accessibility|search|visual-authenticated|performance)\.spec\.ts/,
 			use: {
 				...devices['Desktop Chrome'],
 				storageState: storageStatePath
