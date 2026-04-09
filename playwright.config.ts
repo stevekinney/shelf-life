@@ -10,6 +10,7 @@ export default defineConfig({
 	// workers to 1 to keep tests deterministic. When per-worker isolation is
 	// introduced in a later phase, raise this alongside the database plumbing.
 	workers: 1,
+	outputDir: 'playwright-report/test-results',
 	webServer: {
 		command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173',
 		port: 4173,
@@ -20,8 +21,16 @@ export default defineConfig({
 		}
 	},
 	use: {
-		baseURL: 'http://127.0.0.1:4173'
+		baseURL: 'http://127.0.0.1:4173',
+		trace: 'retain-on-failure',
+		screenshot: 'only-on-failure',
+		video: 'retain-on-failure'
 	},
+	reporter: [
+		['html', { open: 'never', outputFolder: 'playwright-report/html' }],
+		['json', { outputFile: 'playwright-report/report.json' }],
+		['list']
+	],
 	expect: {
 		toHaveScreenshot: {
 			animations: 'disabled',

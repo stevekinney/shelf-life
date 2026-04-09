@@ -19,6 +19,7 @@
 		"performance:build": "npm run build:stats && node scripts/check-performance-budgets.mjs",
 		"performance:runtime": "drizzle-kit push --force && playwright test tests/end-to-end/performance.spec.ts --project=authenticated",
 		"performance:check": "npm run performance:build && npm run performance:runtime",
+		"dossier": "tsx scripts/summarize-failure-dossier.ts",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",

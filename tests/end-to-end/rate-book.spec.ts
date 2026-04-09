@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { resetShelfContent } from './helpers/seed';
 
 test.describe('rate a book on your shelf', () => {

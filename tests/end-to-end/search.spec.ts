@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { resetShelfContent } from './helpers/seed';
 
 const STATION_ELEVEN_HAR = path.resolve('tests/fixtures/open-library-station-eleven.har');

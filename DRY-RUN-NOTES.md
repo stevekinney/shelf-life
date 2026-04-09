@@ -190,7 +190,7 @@ This is where Shelf grew a real testable application surface. Commit history for
 
 ### `lab-wrap-a-custom-verification-mcp.md`
 
-- 🔧 Step 2 now names the storage-state fallback (`fs.existsSync` → use if present). The previous wording required Chromium to launch *with* the storage state, which would crash the server when the file doesn't exist (e.g., before the setup project runs).
+- 🔧 Step 2 now names the storage-state fallback (`fs.existsSync` → use if present). The previous wording required Chromium to launch _with_ the storage state, which would crash the server when the file doesn't exist (e.g., before the setup project runs).
 - 🔧 Step 7 specifies the `try / finally` shutdown pattern.
 - 🔧 Step 8 adds the `url` field and corrects the `ok` predicate to accept an empty public shelf (the `/shelf/[username]` route is a real page even for readers with zero entries).
 - 🔧 Removed "In the validated Shelf workshop repo" phrasing in favor of plain "Shelf's MCP config lives in..."
@@ -216,3 +216,40 @@ This is where Shelf grew a real testable application surface. Commit history for
   5. `tools/call` returned `{ ok: true, bookCount: 2, consoleErrors: [], url: "http://127.0.0.1:4173/shelf/alice" }` — the two seeded shelf entries for alice (Station Eleven + Piranesi).
 
 **Open for Checkpoint M:** The `assets/lab-custom-mcp-public-shelf.png` screenshot could benefit from being regenerated against the current `/shelf/[username]` rendering. Deferred so I don't lose flow; will revisit in the final-reconciliation task along with the other asset audits.
+
+## Checkpoint G — Failure dossiers
+
+### `failure-dossiers-what-agents-actually-need-from-a-red-build.md`
+
+- ✅ Core lesson content matches Shelf's actual setup. The existing TIP callout about moving a baseline to force a failure is accurate against the real `playwright-report/test-results/` layout.
+
+### `lab-build-a-failure-dossier-for-shelf.md`
+
+- ✅ Step 1 config block matches the `playwright.config.ts` patch Shelf now ships.
+- ✅ Step 2 forwarder description matches `tests/end-to-end/fixtures.ts`.
+- ✅ Step 3 `summarize-failure-dossier.ts` shape matches what Shelf ships (naming, dossier fields, reproduction command).
+- ✅ Step 4 CLAUDE.md block matches the "When a test fails" section now in shelf-life/CLAUDE.md.
+
+### Shelf changes
+
+- 🛠 `playwright.config.ts` grows `outputDir: 'playwright-report/test-results'`, `trace: 'retain-on-failure'`, `screenshot: 'only-on-failure'`, `video: 'retain-on-failure'`, and the full `reporter` block (`html` with `open: 'never'`, `json` → `playwright-report/report.json`, `list`).
+- 🛠 New `tests/end-to-end/fixtures.ts` extends the `page` fixture with four forwarders:
+  - `page.on('console', ...)` → `[browser error]` / `[browser warning]` on stderr
+  - `page.on('pageerror', ...)` → `[browser pageerror]`
+  - `page.on('requestfailed', ...)` → `[network failed]` (skips `ERR_ABORTED` / `NS_BINDING_ABORTED`)
+  - `page.on('response', ...)` → `[network 4xx]` / `[network 5xx]`
+- 🛠 Every spec under `tests/end-to-end/` now imports `{ expect, test }` from `./fixtures` instead of `@playwright/test` (except `authentication.setup.ts` and `helpers/seed.ts`, which don't drive pages).
+- 🛠 New `scripts/summarize-failure-dossier.ts` reads `playwright-report/report.json`, walks the suite/spec/test tree, and renders `playwright-report/dossier.md`. The screenshot picker prefers a `diff` or `actual` attachment over the baseline `expected` so visual-regression failures show the meaningful image. Uses `encodeURIComponent`-equivalent `JSON.stringify` on the test title to build a safe `-g` reproduction arg.
+- 🛠 New `npm run dossier` script (`tsx scripts/summarize-failure-dossier.ts`).
+- 🛠 `CLAUDE.md` grows a "When a test fails" section naming `npm run dossier`, the output path, and the "don't add `console.log`" rule.
+
+**Verification:**
+
+- `npm run typecheck` + `npm run lint` + `npm run test` all green.
+- Exercised the dossier loop end-to-end:
+  1. Moved `shelf-page-authenticated-darwin.png` out of the snapshot directory to force a visual-regression failure.
+  2. `npm run test:e2e -- --grep "shelf page matches"` → 1 failed, 1 passed (the dossier generation happens because the JSON reporter ran). Playwright wrote `trace.zip`, retained video, and the error context under `playwright-report/test-results/`.
+  3. Moved the baseline back.
+  4. `npm run dossier` → "Wrote dossier for 1 failure(s) to playwright-report/dossier.md".
+  5. The generated `dossier.md` includes the test title, project name (`authenticated`), file location (`visual-authenticated.spec.ts:8`), full Playwright error message, relative paths to the diff screenshot and retained video, a `npx playwright show-trace` one-liner, and a reproduction command scoped to the failing test.
+- Green-state dossier run also verified: `npm run dossier` exits zero and writes "No failing tests." when `report.json` has no failures.

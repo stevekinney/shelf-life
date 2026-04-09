@@ -57,6 +57,14 @@ Do not report a task complete with any of these failing. If a failure looks unre
 - Complex UI flows (dialogs, menus) also get a manual pass through `docs/accessibility-smoke-checklist.md`.
 - Suppressions must be scoped narrowly with a written reason in code.
 
+## When a test fails
+
+1. Run `npm run dossier` to generate a summary at `playwright-report/dossier.md`.
+2. Read the dossier. It contains the error, screenshot path, trace path, and reproduction command for every failing test.
+3. Use the reproduction command to rerun just the failing test while you iterate.
+4. Do not "fix" a failing test by changing the assertion. Fix the underlying code.
+5. Do not add `console.log` calls to test files to debug. The trace already has the DOM at every step; open it with `npx playwright show-trace <path>`.
+
 ## UI copy
 
 - User-facing copy stays about books, shelves, and reading. Do not mention Playwright, seeded fixtures, test IDs, HARs, or course material in rendered page copy.

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { resetShelfContent } from './helpers/seed';
 
 test.beforeEach(async ({ request }) => {
