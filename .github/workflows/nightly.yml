@@ -1,0 +1,50 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  har-refresh:
+    name: Refresh HAR fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: |
+          echo "Placeholder: re-record tests/fixtures/*.har against the real Open Library API"
+          echo "  and open a pull request with the diff so a human can review upstream drift."
+
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run npm audit
+        run: npm audit --audit-level=high || true
+      - name: Placeholder (open issue on new findings)
+        run: |
+          echo "Placeholder: wire an issue-opener action here so new high-severity"
+          echo "  findings produce a tracked ticket instead of green build output."
+
+  cross-browser:
+    name: Cross-browser Playwright
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: |
+          echo "Placeholder: once per-worker DB isolation lands, run:"
+          echo "  npx playwright install --with-deps ${{ matrix.browser }}"
+          echo "  npx playwright test --project=${{ matrix.browser }}"

@@ -311,3 +311,27 @@ All six parts of the lab landed on shelf-life:
   4. `npm run dossier` → "Wrote dossier for 1 failure(s) to playwright-report/dossier.md".
   5. The generated `dossier.md` includes the test title, project name (`authenticated`), file location (`visual-authenticated.spec.ts:8`), full Playwright error message, relative paths to the diff screenshot and retained video, a `npx playwright show-trace` one-liner, and a reproduction command scoped to the failing test.
 - Green-state dossier run also verified: `npm run dossier` exits zero and writes "No failing tests." when `report.json` has no failures.
+
+## Checkpoint J — CI wiring
+
+### `ci-as-the-loop-of-last-resort.md`
+
+- 🔧 Removed the "Third-run validation note" callout and the "no Git remote configured" phrasing. Replaced with plain prose pointing at Shelf's `npm`, `actions/setup-node@v4`, and the `~/.npm` + `~/.cache/ms-playwright` cache pair.
+- 🔧 Multiple "in the validated third-run Shelf repository" / "the third-run repository" phrases in prose rewritten to "Shelf" without the validation framing.
+
+### `lab-write-the-ci-workflow-from-scratch.md`
+
+- 🔧 Removed the "Third-run validation note" callout plus the "uses npm, not Bun" qualifier plus the "no Git remote configured" framing.
+- 🔧 Rewrote "In the current Shelf repository", "In the validated third run", "In the remote-less workshop repo", and "In the third-run repository" into plain prose referencing Shelf directly.
+
+### Shelf changes
+
+- 🛠 `.github/workflows/main.yml` — 3 jobs: `static` (lint + typecheck + knip + `gitleaks/gitleaks-action@v2`), `unit` (Vitest, `needs: static`), `end-to-end` (Playwright, `needs: static`, installs chromium, writes a CI `.env` with `ENABLE_TEST_SEED=true` + a fake `BETTER_AUTH_SECRET` + `file:./tmp/ci.db`, runs the suite, and uploads `playwright-report/` plus `playwright-report/dossier.md` as separate artifacts on failure with `retention-days: 7`). Every job uses `actions/cache@v4` for `~/.npm` + `~/.cache/ms-playwright`.
+- 🛠 `.github/workflows/nightly.yml` — 3 placeholder jobs: `har-refresh` (echo placeholder), `dependency-audit` (`npm audit --audit-level=high`), `cross-browser` (matrix over chromium/firefox/webkit with `fail-fast: false`, echo-only pending per-worker DB isolation).
+
+**Verification:**
+
+- Both YAML files parse via the `yaml` package.
+- Every named step (`npm run lint`, `npm run typecheck`, `npm run knip`, `npm run test:unit`, `npm run test:e2e`, `npm run dossier`) maps to a real script in `package.json`.
+- `main.yml` has no matrix so `fail-fast: false` isn't required there; `nightly.yml`'s cross-browser matrix does set it.
+- Hosted run kicks in as soon as this commit is pushed to `origin`. The "agent loop check" exercise in the lab becomes exercisable for the first time against real GitHub Actions.
