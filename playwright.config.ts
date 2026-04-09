@@ -58,6 +58,20 @@ export default defineConfig({
 				storageState: storageStatePath
 			},
 			dependencies: ['setup']
+		},
+		// Cross-browser smoke projects. They run only the `smoke.spec.ts` file
+		// against Firefox and WebKit. Skip them by default — invoke via
+		// `npm run test:e2e:cross-browser` when you specifically want the
+		// expanded matrix.
+		{
+			name: 'firefox-smoke',
+			testMatch: /smoke\.spec\.ts/,
+			use: { ...devices['Desktop Firefox'] }
+		},
+		{
+			name: 'webkit-smoke',
+			testMatch: /smoke\.spec\.ts/,
+			use: { ...devices['Desktop Safari'] }
 		}
 	]
 });

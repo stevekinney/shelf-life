@@ -396,3 +396,34 @@ All six parts of the lab landed on shelf-life:
 - `npm run typecheck` + `npm run lint` + `npm run knip` all green (1268 typecheck files, 0 errors, 0 knip findings).
 - `npm run test` — 12 unit + 13 e2e. The visual-authenticated shelf baseline was regenerated to include the new reading-goal card; the suite is stable under the new baseline.
 - Hand-verified via Playwright screenshots that `/goals`, `/shelf`, and `/admin/goals` render with correct progress, goal-met state, and admin-only gating (alice gets 403 on `/admin/goals`, admin@example.com renders it).
+
+## Checkpoint M — Appendices
+
+### `review-portability-beyond-bugbot.md` + `lab-port-the-review-loop-beyond-bugbot.md`
+
+- ✅ Lesson is concept-only, no drift.
+- 🛠 Added `docs/review-loop-playbook.md` (neutral blocking/judgment/noise categories, rule-of-three escalation, re-review path) to satisfy the lab's Step 1 acceptance criterion.
+
+### `cross-browser-validation-without-burning-the-dev-loop.md` + `lab-add-cross-browser-coverage.md`
+
+- ✅ Lesson and lab are clean prose. The lab's example `test:e2e` script is illustrative — the real Shelf `test:e2e` is different, but the lab doesn't claim otherwise.
+- 🛠 `playwright.config.ts` grows two appendix-only projects: `firefox-smoke` and `webkit-smoke`, each matching `smoke.spec.ts` only.
+- 🛠 `package.json` gains a `test:e2e:cross-browser` script that runs `--project=firefox-smoke --project=webkit-smoke`; the default `test:e2e` is now pinned to `--project=setup --project=public --project=authenticated` so the cross-browser projects stay opt-in.
+- ✅ Ran `npm run test:e2e:cross-browser` locally — 4 smoke tests × 2 browsers = 8 passing runs against the real preview server.
+
+### `nightly-verification-loops.md` + `lab-add-a-nightly-verification-workflow.md`
+
+- ✅ Lesson is conceptual.
+- 🛠 `.github/workflows/nightly.yml` schedule moved off the top of the hour (`17 4 * * *`) per the lab acceptance criterion.
+- 🛠 The `cross-browser` placeholder job became a real `cross-browser-smoke` job that installs Firefox + WebKit, writes a CI `.env`, runs `npm run test:e2e:cross-browser`, and uploads `playwright-report/` on failure with 7-day retention.
+- The `har-refresh` and `dependency-audit` jobs stay as placeholder / `npm audit --audit-level=high`; those are deliberate deferrals the lab lists as acceptable.
+
+### `porting-the-shelf-loop-to-another-stack.md` + `lab-translate-the-shelf-loop-to-your-stack.md`
+
+- ✅ Conceptual lesson + conceptual lab. No drift, no shelf state claims beyond comparisons.
+
+**Verification:**
+
+- `npm run typecheck` + `npm run lint` + `npm run knip` all green.
+- `npm run test` — unchanged 12 unit + 13 e2e default suite (cross-browser projects do not run by default).
+- `npm run test:e2e:cross-browser` — 8 tests pass (Firefox: 4, WebKit: 4).

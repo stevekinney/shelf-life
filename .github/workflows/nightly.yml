@@ -2,7 +2,8 @@ name: Nightly
 
 on:
   schedule:
-    - cron: '0 4 * * *'
+    # Off the top of the hour to avoid the GitHub Actions stampede.
+    - cron: '17 4 * * *'
   workflow_dispatch:
 
 permissions:
@@ -34,17 +35,41 @@ jobs:
           echo "Placeholder: wire an issue-opener action here so new high-severity"
           echo "  findings produce a tracked ticket instead of green build output."
 
-  cross-browser:
-    name: Cross-browser Playwright
+  cross-browser-smoke:
+    name: Cross-browser smoke
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v4
-      - name: Placeholder
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-deps-${{ hashFiles('package-lock.json') }}-playwright-${{ hashFiles('playwright.config.ts') }}
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps firefox webkit
+      - name: Create .env for preview server
         run: |
-          echo "Placeholder: once per-worker DB isolation lands, run:"
-          echo "  npx playwright install --with-deps ${{ matrix.browser }}"
-          echo "  npx playwright test --project=${{ matrix.browser }}"
+          cat > .env <<'EOF'
+          DATABASE_URL=file:./tmp/ci.db
+          ORIGIN=http://127.0.0.1:4173
+          BETTER_AUTH_SECRET=ci-test-secret-ci-test-secret-ci-test-secret-32chars
+          ENABLE_TEST_SEED=true
+          OPEN_LIBRARY_BASE_URL=https://openlibrary.org
+          EOF
+          mkdir -p tmp
+      - name: Run cross-browser smoke tests
+        run: npm run test:e2e:cross-browser
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-browser-smoke-report
+          path: playwright-report/
+          retention-days: 7
