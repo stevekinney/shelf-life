@@ -335,3 +335,31 @@ All six parts of the lab landed on shelf-life:
 - Every named step (`npm run lint`, `npm run typecheck`, `npm run knip`, `npm run test:unit`, `npm run test:e2e`, `npm run dossier`) maps to a real script in `package.json`.
 - `main.yml` has no matrix so `fail-fast: false` isn't required there; `nightly.yml`'s cross-browser matrix does set it.
 - Hosted run kicks in as soon as this commit is pushed to `origin`. The "agent loop check" exercise in the lab becomes exercisable for the first time against real GitHub Actions.
+
+**Hosted run result:** pushed commit `6513719` triggered run `24204943037`, which failed at the `Secret scan` step. Root cause: `gitleaks/gitleaks-action@v2` does a partial scan over `<prev>^..<current>` using `git log --no-merges --first-parent`, but the branch had no prior commit with the workflow file present, so the range was invalid (`[git] 'git <command> [<revision>...] -- [<file>...]'` error). The scan itself found "no leaks" but the git range error flipped the exit code. Classic first-push-after-workflow-added failure mode.
+
+**Fix:** replaced `gitleaks/gitleaks-action@v2` with a direct install + `gitleaks dir . --redact --config .gitleaks.toml` CLI invocation. Same scan surface, no dependency on the action's commit-range heuristic.
+
+## Checkpoint K — Post-deploy validation
+
+### `post-merge-and-post-deploy-validation.md`
+
+- ✅ Concept-only lesson. No drift.
+
+### `lab-add-post-deploy-smoke-checks-to-shelf.md`
+
+- ✅ No drift — the lab already handles the "no hosted target yet" case with an explicit local build+preview fallback and a "document the hosted gap in `docs/post-deploy-playbook.md`" instruction.
+
+### Shelf changes
+
+- 🛠 `tests/smoke/post-deploy.spec.ts` — minimal smoke test, reads `SMOKE_BASE_URL` (default `http://127.0.0.1:4173`), verifies the home page's `h1` and a "Sign in" link inside `<main>`.
+- 🛠 `playwright.smoke.config.ts` — dedicated Playwright config so `test:smoke` doesn't fight the main suite's webServer block, writes its HTML report to `playwright-report/smoke-html/`, retains traces + screenshots on failure.
+- 🛠 `npm run test:smoke` script that invokes the new config directly.
+- 🛠 `docs/post-deploy-playbook.md` documents the target URL variable, the named command, what the smoke test actually proves, the stop-ship failures, the rollback action (currently "push a revert to `main`" pending a hosted deploy), the five-minute health window, and the hosted-gap note.
+
+**Verification:**
+
+- `npm run test:smoke` passes against a local `npm run preview` on 4173.
+- `npm run test` continues to pass (13 e2e + 12 unit) — the smoke spec lives in `tests/smoke/`, outside the e2e suite's `testDir: 'tests/end-to-end'`.
+- `npm run knip` stays at 0 findings.
+- Hosted smoke loop: **not executed**. Shelf has no deploy target. The playbook documents the gap explicitly so future reconciliation knows which lines to replace when a real deploy lands.

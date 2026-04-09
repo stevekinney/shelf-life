@@ -21,6 +21,7 @@
 		"performance:check": "npm run performance:build && npm run performance:runtime",
 		"dossier": "tsx scripts/summarize-failure-dossier.ts",
 		"knip": "DATABASE_URL=file:./tmp/knip.db knip",
+		"test:smoke": "playwright test --config=playwright.smoke.config.ts",
 		"pre-commit": "lint-staged",
 		"pre-push": "npm run typecheck && npm run knip && npm run test:unit",
 		"db:push": "drizzle-kit push",
