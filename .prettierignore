@@ -9,5 +9,9 @@ bun.lockb
 /static/
 /drizzle/
 
+# Dry-run worktrees live here; never let Prettier walk nested repo copies
+tmp/
+tmp/dry-run/
+
 # HAR fixtures are opaque recorded artifacts — don't reformat them
 tests/fixtures/*.har
