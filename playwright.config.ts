@@ -5,6 +5,10 @@ const storageStatePath = path.resolve('playwright/.authentication/user.json');
 
 export default defineConfig({
 	testDir: 'tests/end-to-end',
+	// Lab files (tests/end-to-end/labs/) belong to playwright.labs.config.ts.
+	// They are intentionally out of scope for the production suite; see that
+	// config for the dedicated lab projects.
+	testIgnore: /tests\/end-to-end\/labs\//,
 	fullyParallel: true,
 	// The starter uses one shared SQLite database for every worker, so we pin
 	// workers to 1 to keep tests deterministic. When per-worker isolation is

@@ -7,6 +7,8 @@
 		"tests/end-to-end/authentication.setup.ts",
 		"tests/end-to-end/fixtures.ts",
 		"tests/end-to-end/helpers/*.ts",
+		"tests/end-to-end/labs/admin.setup.ts",
+		"tests/end-to-end/labs/fixtures/good-fixtures.ts",
 		"scripts/*.{ts,mjs}",
 		"tools/shelf-verification-server/server.ts"
 	],
