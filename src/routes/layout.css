@@ -12,11 +12,13 @@
 	--color-muted: #5f5648;
 	--color-accent: #815f2b;
 	--color-accent-strong: #6a4b1f;
+	--color-accent-strongest: #533814;
 	--color-success: #1f6a46;
 	--shadow-card: 0 18px 40px rgba(36, 26, 14, 0.08);
 	--page-gutter: clamp(1.25rem, 3vw, 2.5rem);
 	--page-width: 76rem;
-	--radius-card: 1.5rem;
+	--radius-card: 1.125rem;
+	--radius-control: 0.875rem;
 	--font-sans: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	--font-display: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
 }
@@ -45,20 +47,22 @@ h6 {
 	letter-spacing: -0.03em;
 }
 
-::selection {
-	background: rgba(129, 95, 43, 0.18);
-}
-
-a {
-	color: inherit;
-}
-
-button,
-input,
-textarea {
-	font: inherit;
-}
-
 .font-display {
 	font-family: var(--font-display);
+}
+
+@layer base {
+	::selection {
+		background: rgba(129, 95, 43, 0.18);
+	}
+
+	a {
+		color: inherit;
+	}
+
+	button,
+	input,
+	textarea {
+		font: inherit;
+	}
 }

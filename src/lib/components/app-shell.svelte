@@ -20,7 +20,7 @@
 
 	const linkClasses = (href: string) =>
 		[
-			'rounded-full px-3 py-2 text-sm font-medium transition',
+			'rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition',
 			currentPath === href || currentPath.startsWith(`${href}/`)
 				? 'bg-[var(--color-surface-soft)] text-[var(--color-ink)]'
 				: 'text-[var(--color-muted)] hover:bg-white/60 hover:text-[var(--color-ink)]'
@@ -40,13 +40,10 @@
 				</a>
 				<nav class="hidden items-center gap-1 md:flex" aria-label="Primary">
 					<a class={linkClasses('/')} href={resolve('/')}>Home</a>
-					<a class={linkClasses('/design-system')} href={resolve('/design-system')}>
-						Design system
-					</a>
-					<a class={linkClasses('/playground')} href={resolve('/playground')}> Playground </a>
+					<a class={linkClasses('/search')} href={resolve('/search')}>Search</a>
 					{#if currentUser}
-						<a class={linkClasses('/search')} href={resolve('/search')}>Search</a>
 						<a class={linkClasses('/shelf')} href={resolve('/shelf')}>Shelf</a>
+						<a class={linkClasses('/goals')} href={resolve('/goals')}>Goals</a>
 					{/if}
 				</nav>
 			</div>

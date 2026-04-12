@@ -3,73 +3,107 @@
 	import PageHeader from '$lib/components/page-header.svelte';
 	import SurfaceCard from '$lib/components/surface-card.svelte';
 	import { featuredBooks } from '$lib/sample-books';
+	import { shelfStatusLabels } from '$lib/shelf';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+
+	const productHighlights = [
+		{
+			title: 'Search with intent',
+			description:
+				'Look up books by title, author, or Open Library identifier, then bring the ones you care about onto your shelf.'
+		},
+		{
+			title: 'Keep an honest shelf',
+			description:
+				'Move books from to-read to reading to finished so your list reflects what is actually happening.'
+		},
+		{
+			title: 'Rate what you finish',
+			description:
+				'Leave yourself a quick verdict while the book is still fresh, so your shelf becomes a record and not just a queue.'
+		},
+		{
+			title: 'Track the year clearly',
+			description: 'Set an annual reading goal and see your progress every time you open the app.'
+		}
+	] as const;
+
+	const readingFlow = [
+		{
+			title: 'Find the book',
+			description:
+				'Start with search when a recommendation, review, or impulse catch your attention.'
+		},
+		{
+			title: 'Add it to your shelf',
+			description:
+				'Keep the titles you want to read, are reading now, or already finished in one place.'
+		},
+		{
+			title: 'Finish with context',
+			description: 'Mark the book as read, leave a rating, and keep your reading history useful.'
+		}
+	] as const;
 </script>
 
 <div class="space-y-12">
 	<PageHeader
-		eyebrow="Course starter"
-		title="Shelf is the foundation for every verification loop in the course."
-		description="Start with a clean SvelteKit application shell, a real book domain, and enough intentional UI to make later testing work feel grounded."
+		eyebrow="Personal reading tracker"
+		title="Build a shelf that remembers what you actually read."
+		description="Shelf keeps your next read, your current stack, and the books you already finished in one calm place. Search the catalog, rate what you finish, and keep your reading goal in sight."
 	>
 		{#snippet actions()}
 			<div class="flex flex-wrap gap-3">
-				<Button href="/login">Sign in</Button>
-				<Button href="/design-system" kind="secondary">View the design system</Button>
+				{#if data.user}
+					<Button href="/shelf">Open your shelf</Button>
+					<Button href="/search" kind="secondary">Find a book</Button>
+				{:else}
+					<Button href="/login">Sign in</Button>
+					<Button href="/search" kind="secondary">Browse books</Button>
+				{/if}
 			</div>
 		{/snippet}
 	</PageHeader>
 
 	<section class="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
 		<SurfaceCard
-			title="What is ready now"
-			description="These are the starter surfaces in this first pass."
+			title="Everything you need to keep reading"
+			description="Shelf stays focused on the few jobs a reading app should do well."
 		>
 			<div class="grid gap-3 sm:grid-cols-2">
-				<div
-					class="rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] p-4"
-				>
-					<p class="text-sm font-semibold text-[var(--color-ink)]">Public home page</p>
-					<p class="mt-2 text-sm text-[var(--color-muted)]">
-						A clear starting point for the application and the course.
-					</p>
-				</div>
-				<div
-					class="rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] p-4"
-				>
-					<p class="text-sm font-semibold text-[var(--color-ink)]">App-native auth</p>
-					<p class="mt-2 text-sm text-[var(--color-muted)]">
-						Email and password sign in now lives at <code>/login</code>.
-					</p>
-				</div>
-				<div
-					class="rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] p-4"
-				>
-					<p class="text-sm font-semibold text-[var(--color-ink)]">Protected search and shelf</p>
-					<p class="mt-2 text-sm text-[var(--color-muted)]">
-						The course can now build real flows on top of stable starter routes.
-					</p>
-				</div>
-				<div
-					class="rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] p-4"
-				>
-					<p class="text-sm font-semibold text-[var(--color-ink)]">Visual baseline</p>
-					<p class="mt-2 text-sm text-[var(--color-muted)]">
-						The design-system page is ready for screenshot-based checks.
-					</p>
-				</div>
+				{#each productHighlights as highlight (highlight.title)}
+					<div
+						class="rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] p-4"
+					>
+						<p class="text-sm font-semibold text-[var(--color-ink)]">{highlight.title}</p>
+						<p class="mt-2 text-sm text-[var(--color-muted)]">{highlight.description}</p>
+					</div>
+				{/each}
 			</div>
 		</SurfaceCard>
 
 		<SurfaceCard
-			title="What comes next"
-			description="These areas are intentionally deferred to later exercises."
+			eyebrow="How Shelf works"
+			title="From curiosity to finished"
+			description="A reading list only helps if it stays honest. Shelf keeps the routine lightweight."
 		>
-			<ul class="space-y-3 text-sm text-[var(--color-muted)]">
-				<li>Open Library integration for real search results</li>
-				<li>CRUD flows for shelf management and rating persistence</li>
-				<li>Stats, goals, admin views, and full course verification loops</li>
-				<li>HAR recording, dossiers, CI, and custom verification tools</li>
-			</ul>
+			<ol class="space-y-4">
+				{#each readingFlow as step, index (step.title)}
+					<li class="flex gap-4">
+						<span
+							class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-surface-soft)] text-sm font-semibold text-[var(--color-accent-strong)]"
+						>
+							{index + 1}
+						</span>
+						<div class="space-y-1">
+							<p class="text-sm font-semibold text-[var(--color-ink)]">{step.title}</p>
+							<p class="text-sm leading-6 text-[var(--color-muted)]">{step.description}</p>
+						</div>
+					</li>
+				{/each}
+			</ol>
 		</SurfaceCard>
 	</section>
 
@@ -78,14 +112,12 @@
 			<p
 				class="text-xs font-semibold tracking-[0.22em] text-[var(--color-accent-strong)] uppercase"
 			>
-				Starter library
+				On readers' shelves
 			</p>
-			<h2 class="font-display text-3xl text-[var(--color-ink)]">
-				Sample books used across the starter UI
-			</h2>
+			<h2 class="font-display text-3xl text-[var(--color-ink)]">A few books worth keeping close</h2>
 			<p class="max-w-3xl text-sm text-[var(--color-muted)]">
-				These are placeholder records for the shell, design system, and early tests. Real fetching
-				and persistence arrive later.
+				Featured titles show the kind of record Shelf keeps: what the book is, where it sits in your
+				reading life, and how you felt about it when you were done.
 			</p>
 		</div>
 
@@ -97,10 +129,26 @@
 					padding="tight"
 					className="h-full"
 				>
-					<p class="text-sm font-medium text-[var(--color-ink)]">{book.author}</p>
-					<p class="mt-3 text-xs tracking-[0.2em] text-[var(--color-muted)] uppercase">
-						Open Library placeholder: {book.openLibraryId}
-					</p>
+					<div class="flex items-start justify-between gap-3">
+						<p class="text-sm font-medium text-[var(--color-ink)]">{book.author}</p>
+						{#if book.status}
+							<span
+								class="rounded-full border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-[var(--color-accent-strong)] uppercase"
+							>
+								{shelfStatusLabels[book.status]}
+							</span>
+						{/if}
+					</div>
+					<div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-[var(--color-muted)]">
+						<span>Open Library: {book.openLibraryId}</span>
+						{#if book.rating !== null && book.rating !== undefined}
+							<span
+								class="rounded-full bg-[var(--color-surface-soft)] px-3 py-1 font-semibold text-[var(--color-ink)]"
+							>
+								Rated {book.rating}/5
+							</span>
+						{/if}
+					</div>
 				</SurfaceCard>
 			{/each}
 		</div>

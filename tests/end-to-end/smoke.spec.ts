@@ -1,13 +1,84 @@
 import { expect, test } from './fixtures';
 
-test('home page renders the Shelf starter shell', async ({ page }) => {
+test('home page reads like a real public-facing reading app', async ({ page }) => {
 	await page.goto('/');
 
-	await expect(page.getByRole('heading', { name: /Shelf is the foundation/i })).toBeVisible();
-	await expect(page.getByRole('main').getByRole('link', { name: 'Sign in' })).toBeVisible();
 	await expect(
-		page.getByRole('main').getByRole('link', { name: 'View the design system' })
+		page.getByRole('heading', { name: /Build a shelf that remembers what you actually read/i })
 	).toBeVisible();
+	await expect(page.getByRole('main').getByRole('link', { name: 'Sign in' })).toBeVisible();
+	await expect(page.getByRole('main').getByRole('link', { name: 'Browse books' })).toBeVisible();
+	await expect(page.getByRole('navigation', { name: 'Primary' })).toContainText('Search');
+	await expect(
+		page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Design system' })
+	).toHaveCount(0);
+	await expect(
+		page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Playground' })
+	).toHaveCount(0);
+});
+
+test('sign-in actions use the primary button treatment with accessible contrast', async ({
+	page
+}) => {
+	await page.goto('/');
+
+	const signInButtons = [
+		page.getByRole('banner').getByRole('link', { name: 'Sign in' }),
+		page.getByRole('main').getByRole('link', { name: 'Sign in' })
+	];
+
+	for (const signInButton of signInButtons) {
+		await expect(signInButton).toBeVisible();
+
+		const buttonStyles = await signInButton.evaluate((element) => {
+			const computedStyles = window.getComputedStyle(element);
+			const parseRgb = (value: string): [number, number, number] => {
+				const channels = value
+					.match(/\d+(\.\d+)?/g)
+					?.slice(0, 3)
+					.map(Number);
+				const [red, green, blue] = channels ?? [];
+
+				if (red === undefined || green === undefined || blue === undefined) {
+					throw new Error(`Could not parse color value: ${value}`);
+				}
+
+				return [red, green, blue];
+			};
+
+			const toRelativeLuminance = ([red, green, blue]: [number, number, number]) => {
+				const normalizeChannel = (channel: number) => {
+					const normalized = channel / 255;
+					return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+				};
+
+				const [normalizedRed, normalizedGreen, normalizedBlue] = [
+					normalizeChannel(red),
+					normalizeChannel(green),
+					normalizeChannel(blue)
+				];
+
+				return normalizedRed * 0.2126 + normalizedGreen * 0.7152 + normalizedBlue * 0.0722;
+			};
+
+			const foregroundColor = parseRgb(computedStyles.color);
+			const backgroundColor = parseRgb(computedStyles.backgroundColor);
+			const foregroundLuminance = toRelativeLuminance(foregroundColor);
+			const backgroundLuminance = toRelativeLuminance(backgroundColor);
+			const lighterLuminance = Math.max(foregroundLuminance, backgroundLuminance);
+			const darkerLuminance = Math.min(foregroundLuminance, backgroundLuminance);
+
+			return {
+				backgroundColor: computedStyles.backgroundColor,
+				color: computedStyles.color,
+				contrastRatio: (lighterLuminance + 0.05) / (darkerLuminance + 0.05)
+			};
+		});
+
+		expect(buttonStyles.color).toBe('rgb(255, 255, 255)');
+		expect(buttonStyles.backgroundColor).toBe('rgb(106, 75, 31)');
+		expect(buttonStyles.contrastRatio).toBeGreaterThanOrEqual(4.5);
+	}
 });
 
 test('protected routes redirect unauthenticated readers to login', async ({ page }) => {

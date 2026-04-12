@@ -12,19 +12,19 @@
 <div class="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.95fr_1.05fr]">
 	<div class="space-y-4">
 		<PageHeader
-			eyebrow="App-native authentication"
-			title="Sign in to your Shelf starter."
-			description="This route replaces the generated demo auth pages. It is intentionally simple, accessible, and ready for the later course exercises."
+			eyebrow="Welcome back"
+			title="Sign in to Shelf."
+			description="Use your email and password to open your shelf, search for books, and keep your reading goal moving."
 		/>
 
 		<SurfaceCard
-			title="What this page is for"
-			description="The login route is now the single entry point for starter auth flows."
+			title="Everything tied to your account"
+			description="Shelf keeps your reading history attached to you, not the browser you happened to be using."
 		>
 			<ul class="space-y-3 text-sm text-[var(--color-muted)]">
-				<li>Use email and password auth through Better Auth.</li>
-				<li>Create a starter account without leaving this screen.</li>
-				<li>Land in the protected app surface after successful auth.</li>
+				<li>Keep your shelf, reading status, and ratings in sync.</li>
+				<li>Create an account without leaving this screen.</li>
+				<li>Return to the page you originally wanted after signing in.</li>
 			</ul>
 		</SurfaceCard>
 	</div>
@@ -41,7 +41,7 @@
 				type="email"
 				autocomplete="email"
 				required
-				hint="Use a real-looking address so later fixtures and tests read cleanly."
+				hint="Use the address you want attached to your shelf and reading history."
 			/>
 			<Input
 				label="Password"

@@ -24,7 +24,7 @@
 	<title>{title}</title>
 	<meta
 		name="description"
-		content="Shelf is a book-tracking starter application for the Self-Testing AI Agents course."
+		content="Shelf helps you search for books, build a shelf, rate what you finish, and track your reading goals."
 	/>
 </svelte:head>
 

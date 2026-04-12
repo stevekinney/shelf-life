@@ -12,6 +12,7 @@
 
 	let { data }: { data: PageData } = $props();
 
+	let pendingEntryId = $state<string | null>(null);
 	let rateTarget = $state<ShelfEntryView | null>(null);
 	let feedbackMessage = $state<{ tone: 'success' | 'error'; text: string } | null>(null);
 
@@ -19,8 +20,90 @@
 		rateTarget = entry;
 	};
 
+	const isEntryPending = (entryId: string) => pendingEntryId === entryId;
+
+	const readErrorMessage = async (response: Response, fallbackMessage: string) => {
+		const body = (await response.json().catch(() => ({}))) as { error?: string };
+		return body.error ?? fallbackMessage;
+	};
+
+	const updateShelfEntry = async (
+		entry: ShelfEntryView,
+		body: Record<string, unknown>,
+		successMessage: string,
+		errorMessage: string
+	) => {
+		feedbackMessage = null;
+		pendingEntryId = entry.id;
+
+		try {
+			const response = await fetch(`/api/shelf/${entry.id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+
+			if (!response.ok) {
+				feedbackMessage = {
+					tone: 'error',
+					text: await readErrorMessage(response, errorMessage)
+				};
+				return;
+			}
+
+			feedbackMessage = { tone: 'success', text: successMessage };
+			await invalidateAll();
+		} catch {
+			feedbackMessage = { tone: 'error', text: 'Network error while updating your shelf.' };
+		} finally {
+			pendingEntryId = null;
+		}
+	};
+
+	const markEntryAsRead = (entry: ShelfEntryView) =>
+		updateShelfEntry(
+			entry,
+			{ status: 'finished' },
+			`Marked ${entry.book.title} as read.`,
+			'We could not mark that book as read.'
+		);
+
+	const removeEntry = async (entry: ShelfEntryView) => {
+		feedbackMessage = null;
+		pendingEntryId = entry.id;
+
+		try {
+			const response = await fetch(`/api/shelf/${entry.id}`, { method: 'DELETE' });
+			if (!response.ok) {
+				feedbackMessage = {
+					tone: 'error',
+					text: await readErrorMessage(response, 'We could not remove that book from your shelf.')
+				};
+				return;
+			}
+
+			if (rateTarget?.id === entry.id) {
+				rateTarget = null;
+			}
+
+			feedbackMessage = {
+				tone: 'success',
+				text: `Removed ${entry.book.title} from your shelf.`
+			};
+			await invalidateAll();
+		} catch {
+			feedbackMessage = {
+				tone: 'error',
+				text: 'Network error while removing that book from your shelf.'
+			};
+		} finally {
+			pendingEntryId = null;
+		}
+	};
+
 	const handleRatingSubmitted = async (entryId: string, rating: number) => {
 		feedbackMessage = null;
+		pendingEntryId = entryId;
 		try {
 			const response = await fetch(`/api/shelf/${entryId}`, {
 				method: 'PATCH',
@@ -43,6 +126,7 @@
 		} catch {
 			feedbackMessage = { tone: 'error', text: 'Network error while saving the rating.' };
 		} finally {
+			pendingEntryId = null;
 			rateTarget = null;
 		}
 	};
@@ -156,19 +240,37 @@
 								<span class="text-xs text-[var(--color-muted)]">
 									Open Library: {entry.book.openLibraryId}
 								</span>
-								<div class="flex items-center gap-3">
+								<div class="flex flex-wrap items-center gap-3">
 									{#if entry.rating !== null}
 										<span class="text-sm font-semibold text-[var(--color-ink)]">
 											Rated: {entry.rating}/5
 										</span>
 									{/if}
-									<button
+									<Button
 										type="button"
-										class="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-accent-strong)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+										kind="secondary"
+										disabled={isEntryPending(entry.id)}
 										onclick={() => openRatingDialog(entry)}
 									>
 										Rate this book
-									</button>
+									</Button>
+									{#if entry.status !== 'finished'}
+										<Button
+											type="button"
+											disabled={isEntryPending(entry.id)}
+											onclick={() => markEntryAsRead(entry)}
+										>
+											Mark as read
+										</Button>
+									{/if}
+									<Button
+										type="button"
+										kind="ghost"
+										disabled={isEntryPending(entry.id)}
+										onclick={() => removeEntry(entry)}
+									>
+										Remove from shelf
+									</Button>
 								</div>
 							</div>
 						</article>

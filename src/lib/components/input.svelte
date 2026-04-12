@@ -30,7 +30,7 @@
 <label class="grid gap-2 text-sm font-medium text-[var(--color-ink)]" for={inputId}>
 	<span>{label}</span>
 	<input
-		class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-border-strong)] focus:ring-[var(--color-border-strong)]"
+		class="w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-border-strong)] focus:ring-[var(--color-border-strong)]"
 		id={inputId}
 		{name}
 		{type}

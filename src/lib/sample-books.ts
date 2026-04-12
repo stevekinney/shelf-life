@@ -15,7 +15,7 @@ const starterBooks: StarterBook[] = [
 		title: 'Station Eleven',
 		author: 'Emily St. John Mandel',
 		description:
-			'A literary post-collapse novel with enough warmth to keep the starter app grounded.',
+			'A traveling troupe keeps art, memory, and human connection alive after a devastating collapse.',
 		status: 'reading',
 		rating: 4
 	},
@@ -24,8 +24,7 @@ const starterBooks: StarterBook[] = [
 		openLibraryId: 'OL27219525M',
 		title: 'Piranesi',
 		author: 'Susanna Clarke',
-		description:
-			'A compact, beautifully strange novel that makes a good search and card-layout fixture.',
+		description: 'An uncanny mystery set inside a vast house of tides, statues, and endless halls.',
 		status: 'to-read',
 		rating: null
 	},
@@ -34,7 +33,8 @@ const starterBooks: StarterBook[] = [
 		openLibraryId: 'OL25416632M',
 		title: 'Annihilation',
 		author: 'Jeff VanderMeer',
-		description: 'A sharp, memorable third fixture for search states, previews, and early tests.',
+		description:
+			'A biologist joins a secretive expedition into a landscape that feels beautiful, hostile, and wrong.',
 		status: 'finished',
 		rating: 5
 	}
