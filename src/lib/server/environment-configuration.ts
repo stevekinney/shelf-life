@@ -1,6 +1,6 @@
 type EnvironmentVariables = Record<string, string | undefined>;
 
-export type ShelfEnvironmentConfiguration = {
+export type EnvironmentConfiguration = {
 	authOrigin?: string;
 	betterAuthSecret: string;
 	databaseUrl: string;
@@ -23,7 +23,7 @@ const readEnvironmentString = (value: string | undefined): string | undefined =>
  */
 export const resolveShelfEnvironmentConfiguration = (
 	environmentVariables: EnvironmentVariables
-): ShelfEnvironmentConfiguration => {
+): EnvironmentConfiguration => {
 	const authOrigin = readEnvironmentString(environmentVariables.ORIGIN);
 
 	return {
