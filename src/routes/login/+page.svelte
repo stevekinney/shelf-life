@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import { defaultAuthenticatedPath } from '$lib/authentication-navigation';
 	import Button from '$lib/components/button.svelte';
 	import Input from '$lib/components/input.svelte';
 	import PageHeader from '$lib/components/page-header.svelte';
@@ -82,24 +83,36 @@
 				</p>
 			{/if}
 
-			<div class="flex flex-wrap items-center gap-4">
-				<Button type="submit">{submitButtonLabel}</Button>
-				{#if isCreateAccountMode}
-					<a
-						href={resolve(data.signInPath)}
-						class="text-sm font-medium text-[var(--color-muted)] underline-offset-4 transition hover:text-[var(--color-ink)] hover:underline"
-					>
-						Already have an account? Sign in instead.
-					</a>
-				{:else}
-					<a
-						href={resolve(data.createAccountPath)}
-						class="text-sm font-medium text-[var(--color-muted)] underline-offset-4 transition hover:text-[var(--color-ink)] hover:underline"
-					>
-						Need an account? Create one instead.
-					</a>
-				{/if}
-			</div>
+			<Button type="submit">{submitButtonLabel}</Button>
 		</form>
+
+		{#if isCreateAccountMode}
+			<form method="GET" action={resolve('/login')} class="mt-4">
+				{#if data.returnTo !== defaultAuthenticatedPath}
+					<input type="hidden" name="returnTo" value={data.returnTo} />
+				{/if}
+
+				<button
+					type="submit"
+					class="text-sm font-medium text-[var(--color-muted)] underline-offset-4 transition hover:text-[var(--color-ink)] hover:underline"
+				>
+					Already have an account? Sign in instead.
+				</button>
+			</form>
+		{:else}
+			<form method="GET" action={resolve('/login')} class="mt-4">
+				<input type="hidden" name="mode" value="create-account" />
+				{#if data.returnTo !== defaultAuthenticatedPath}
+					<input type="hidden" name="returnTo" value={data.returnTo} />
+				{/if}
+
+				<button
+					type="submit"
+					class="text-sm font-medium text-[var(--color-muted)] underline-offset-4 transition hover:text-[var(--color-ink)] hover:underline"
+				>
+					Need an account? Create one instead.
+				</button>
+			</form>
+		{/if}
 	</SurfaceCard>
 </div>

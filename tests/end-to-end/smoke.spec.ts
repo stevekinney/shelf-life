@@ -195,7 +195,7 @@ test('login page defaults to sign-in mode and only asks for a display name durin
 	await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
 	await expect(page.getByLabel('Display name')).toHaveCount(0);
 
-	await page.getByRole('link', { name: 'Need an account? Create one instead.' }).click();
+	await page.getByRole('button', { name: 'Need an account? Create one instead.' }).click();
 
 	await expect(page).toHaveURL(/\/login\?mode=create-account$/);
 	await expect(page.getByRole('heading', { name: 'Create your Shelf account.' })).toBeVisible();
