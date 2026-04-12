@@ -15,8 +15,10 @@ Do not report a task complete with any of these failing. If a failure looks unre
 
 ## Routes
 
-- Public: `/`, `/login`, `/design-system`
-- Protected: `/search`, `/shelf` — gate server-side on `locals.user`, never with client guards
+- Public: `/`, `/login`, `/design-system`, `/playground`
+- Protected: `/search`, `/shelf`, `/admin` — gate server-side on `locals.user`, never with client guards
+- `/playground` is the lab fixture for `lab-locator-challenges`. It ships three intentional a11y violations (div-as-button, icon-only button with no accessible name) that trip svelte-check warnings on every typecheck and build. Do not "fix" them — they are the bad examples the lab targets.
+- `/admin` is the protected fixture for `lab-bugbot-on-a-planted-bug`. The planted permission bug lives on branch `planted-bug/admin-feature`; `main`'s admin route is the clean baseline.
 - Do not reintroduce `src/routes/demo/` or any generated starter pages
 - New routes must match the Shelf product domain (books, shelves, ratings)
 

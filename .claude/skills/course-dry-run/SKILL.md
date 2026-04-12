@@ -79,7 +79,7 @@ Therefore: the bootstrap is **serial**, exactly one worktree has an active previ
 
 Immediately after `git worktree add`, before any lab commands, in this exact order:
 
-1. `cp .claude/skills/course-dry-run/references/dry-run.env.template .env` inside the worktree, then replace `__DRY_RUN_SECRET__` with an `openssl rand -hex 16` value. The real secret is synthesized at copy time and never lands in version control; the template stays clean under `.gitleaks.toml`.
+1. `cp .claude/skills/course-dry-run/references/dry-run.env.template .env` inside the worktree, then replace `__DRY_RUN_SECRET__` with an `openssl rand -base64 32` value (drop any trailing `=` padding if your shell balks). A 32-byte base64 value clears Better Auth's entropy check; the 16-byte `rand -hex 16` value we used previously clears Better Auth's _length_ check but still trips its low-entropy warning, filling the dry-run logs with noise. The real secret is synthesized at copy time and never lands in version control; the template stays clean under `.gitleaks.toml`.
 2. `mkdir -p tmp` inside the worktree. The template's `DATABASE_URL=file:./tmp/dry-run.db` assumes the directory exists; libsql errors with `ConnectionFailed (14)` otherwise. Step 5 will fail without this.
 3. Exclude the worktree's own nested `tmp/` so `git status` stays clean. Worktrees do not have their own `.git/info/exclude` — write to `<main-repo>/.git/worktrees/<worktree-name>/info/exclude` instead (create the `info/` directory first if it does not exist).
 4. `npm ci` (not `npm install` — match lockfile semantics). Note: `npm ci` fires the `prepare` lifecycle script automatically via postinstall on this project, so step 5 below is a no-op if you just ran `npm ci`.
