@@ -1,13 +1,133 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import Button from '$lib/components/button.svelte';
 	import PageHeader from '$lib/components/page-header.svelte';
 	import SurfaceCard from '$lib/components/surface-card.svelte';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
+
+	let feedback = $state<{ tone: 'success' | 'error'; message: string } | null>(null);
+	let pendingKey = $state<string | null>(null);
 
 	const inputClasses =
 		'w-24 appearance-none rounded-(--radius-control) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-sm text-(--color-ink) placeholder:text-(--color-muted) focus:border-(--color-border-strong) focus:ring-(--color-border-strong)';
+
+	const extractMessage = async (response: Response, fallback: string) => {
+		const body = (await response.json().catch(() => ({}))) as {
+			error?: string;
+			message?: string;
+		};
+		return body.error ?? body.message ?? fallback;
+	};
+
+	const parseFeaturedPosition = (raw: string): number | null | 'invalid' => {
+		const trimmed = raw.trim();
+		if (!trimmed) return null;
+		const parsed = Number(trimmed);
+		if (!Number.isInteger(parsed) || parsed < 1) return 'invalid';
+		return parsed;
+	};
+
+	const saveFeaturedBook = async (event: SubmitEvent, openLibraryId: string) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget as HTMLFormElement);
+		const position = parseFeaturedPosition(String(formData.get('position') ?? ''));
+
+		if (position === 'invalid') {
+			feedback = {
+				tone: 'error',
+				message: 'Feature slots must be whole numbers starting at 1.'
+			};
+			return;
+		}
+
+		pendingKey = `save:${openLibraryId}`;
+		feedback = null;
+		try {
+			const response = await fetch('/api/admin/featured-books', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ openLibraryId, position })
+			});
+			if (!response.ok) {
+				feedback = {
+					tone: 'error',
+					message: await extractMessage(response, 'That book could not be featured.')
+				};
+				return;
+			}
+			feedback = {
+				tone: 'success',
+				message:
+					position === null
+						? 'Removed that book from the public featured list.'
+						: `Featured that book in slot ${position}.`
+			};
+			await invalidateAll();
+		} catch {
+			feedback = { tone: 'error', message: 'Network error while saving the featured book.' };
+		} finally {
+			pendingKey = null;
+		}
+	};
+
+	const clearFeaturedBook = async (openLibraryId: string) => {
+		pendingKey = `clear:${openLibraryId}`;
+		feedback = null;
+		try {
+			const response = await fetch(
+				`/api/admin/featured-books?openLibraryId=${encodeURIComponent(openLibraryId)}`,
+				{ method: 'DELETE' }
+			);
+			if (!response.ok) {
+				feedback = {
+					tone: 'error',
+					message: await extractMessage(response, 'That featured book could not be cleared.')
+				};
+				return;
+			}
+			feedback = {
+				tone: 'success',
+				message: 'Removed that book from the public featured list.'
+			};
+			await invalidateAll();
+		} catch {
+			feedback = { tone: 'error', message: 'Network error while clearing the featured book.' };
+		} finally {
+			pendingKey = null;
+		}
+	};
+
+	const toggleUserAdmin = async (userId: string, nextIsAdmin: boolean, name: string) => {
+		pendingKey = `user:${userId}`;
+		feedback = null;
+		try {
+			const response = await fetch(`/api/admin/users/${encodeURIComponent(userId)}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ isAdmin: nextIsAdmin })
+			});
+			if (!response.ok) {
+				feedback = {
+					tone: 'error',
+					message: await extractMessage(response, 'That role change could not be applied.')
+				};
+				return;
+			}
+			feedback = {
+				tone: 'success',
+				message: nextIsAdmin
+					? `${name} can now administer Shelf.`
+					: `${name} is now a reader-only account.`
+			};
+			await invalidateAll();
+		} catch {
+			feedback = { tone: 'error', message: 'Network error while updating that user.' };
+		} finally {
+			pendingKey = null;
+		}
+	};
 </script>
 
 <div class="space-y-8">
@@ -33,18 +153,18 @@
 		</SurfaceCard>
 	</section>
 
-	{#if form?.message}
+	{#if feedback}
 		<div
 			role="status"
 			aria-live="polite"
 			class={[
 				'rounded-2xl border px-4 py-3 text-sm',
-				form.tone === 'success'
+				feedback.tone === 'success'
 					? 'border-green-200 bg-green-50 text-green-800'
 					: 'border-red-200 bg-red-50 text-red-700'
 			]}
 		>
-			{form.message}
+			{feedback.message}
 		</div>
 	{/if}
 
@@ -102,11 +222,9 @@
 								</div>
 
 								<form
-									method="POST"
-									action="?/saveFeaturedBook"
 									class="flex flex-wrap items-end gap-2"
+									onsubmit={(event) => saveFeaturedBook(event, book.openLibraryId)}
 								>
-									<input type="hidden" name="openLibraryId" value={book.openLibraryId} />
 									<label class="grid gap-1 text-xs font-semibold text-(--color-ink)">
 										<span>Home page slot</span>
 										<input
@@ -118,11 +236,22 @@
 											placeholder="—"
 										/>
 									</label>
-									<Button type="submit" kind="secondary">Save</Button>
+									<Button
+										type="submit"
+										kind="secondary"
+										disabled={pendingKey === `save:${book.openLibraryId}`}
+									>
+										{pendingKey === `save:${book.openLibraryId}` ? 'Saving…' : 'Save'}
+									</Button>
 									{#if book.featuredPosition !== null}
-										<Button type="submit" formaction="?/clearFeaturedBook" kind="ghost"
-											>Clear</Button
+										<Button
+											type="button"
+											kind="ghost"
+											disabled={pendingKey === `clear:${book.openLibraryId}`}
+											onclick={() => clearFeaturedBook(book.openLibraryId)}
 										>
+											{pendingKey === `clear:${book.openLibraryId}` ? 'Clearing…' : 'Clear'}
+										</Button>
 									{/if}
 								</form>
 							</div>
@@ -165,17 +294,19 @@
 							<p class="text-sm text-(--color-muted)">{user.email}</p>
 						</div>
 
-						<form method="POST" action="?/toggleUserAdmin">
-							<input type="hidden" name="userId" value={user.id} />
-							<input type="hidden" name="nextIsAdmin" value={user.isAdmin ? 'false' : 'true'} />
-							<Button
-								type="submit"
-								kind={user.isAdmin ? 'ghost' : 'secondary'}
-								disabled={user.id === data.currentUserId && user.isAdmin}
-							>
+						<Button
+							type="button"
+							kind={user.isAdmin ? 'ghost' : 'secondary'}
+							disabled={(user.id === data.currentUserId && user.isAdmin) ||
+								pendingKey === `user:${user.id}`}
+							onclick={() => toggleUserAdmin(user.id, !user.isAdmin, user.name)}
+						>
+							{#if pendingKey === `user:${user.id}`}
+								Updating…
+							{:else}
 								{user.isAdmin ? 'Remove admin access' : 'Make administrator'}
-							</Button>
-						</form>
+							{/if}
+						</Button>
 					</div>
 				</li>
 			{/each}
