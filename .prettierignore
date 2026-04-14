@@ -15,3 +15,4 @@ tmp/dry-run/
 
 # HAR fixtures are opaque recorded artifacts — don't reformat them
 tests/fixtures/*.har
+playwright/recordings/*.har

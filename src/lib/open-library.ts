@@ -1,6 +1,3 @@
-import { env } from '$env/dynamic/private';
-import { getEnvironmentVariables } from '$lib/server/environment';
-
 export type OpenLibrarySearchResult = {
 	openLibraryId: string;
 	title: string;
@@ -23,12 +20,9 @@ type OpenLibraryRawResponse = {
 	docs?: OpenLibraryRawDoc[];
 };
 
+export const OPEN_LIBRARY_BASE_URL = 'https://openlibrary.org';
 const SEARCH_LIMIT = 10;
 const NETWORK_TIMEOUT_MS = 4000;
-
-const environmentConfiguration = getEnvironmentVariables(env);
-
-const resolveBaseUrl = () => environmentConfiguration.openLibraryBaseUrl;
 
 const pickIdentifier = (doc: OpenLibraryRawDoc): string | null => {
 	if (doc.cover_edition_key) return doc.cover_edition_key;
@@ -49,19 +43,26 @@ const normalizeDoc = (doc: OpenLibraryRawDoc): OpenLibrarySearchResult | null =>
 	};
 };
 
+type SearchOptions = {
+	baseUrl?: string;
+	fetch?: typeof fetch;
+	signal?: AbortSignal;
+};
+
 /**
  * Searches the Open Library work index for the given query. Returns an empty
- * array on network failure or non-2xx response — callers decide how to handle
- * empty-state rendering.
+ * array on network failure or non-2xx response.
  */
 export const searchOpenLibrary = async (
 	query: string,
-	fetchImpl: typeof fetch = fetch
+	options: SearchOptions = {}
 ): Promise<OpenLibrarySearchResult[]> => {
 	const trimmedQuery = query.trim();
 	if (!trimmedQuery) return [];
 
-	const searchUrl = new URL('/search.json', resolveBaseUrl());
+	const { baseUrl = OPEN_LIBRARY_BASE_URL, fetch: fetchImpl = fetch, signal } = options;
+
+	const searchUrl = new URL('/search.json', baseUrl);
 	searchUrl.searchParams.set('q', trimmedQuery);
 	searchUrl.searchParams.set('limit', String(SEARCH_LIMIT));
 	searchUrl.searchParams.set(
@@ -71,6 +72,8 @@ export const searchOpenLibrary = async (
 
 	const abortController = new AbortController();
 	const timeoutHandle = setTimeout(() => abortController.abort(), NETWORK_TIMEOUT_MS);
+	const onExternalAbort = () => abortController.abort();
+	signal?.addEventListener('abort', onExternalAbort);
 
 	try {
 		const response = await fetchImpl(searchUrl.toString(), {
@@ -87,5 +90,6 @@ export const searchOpenLibrary = async (
 		return [];
 	} finally {
 		clearTimeout(timeoutHandle);
+		signal?.removeEventListener('abort', onExternalAbort);
 	}
 };

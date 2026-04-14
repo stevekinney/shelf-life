@@ -1,16 +1,113 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import Button from '$lib/components/button.svelte';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import Input from '$lib/components/input.svelte';
 	import PageHeader from '$lib/components/page-header.svelte';
 	import SurfaceCard from '$lib/components/surface-card.svelte';
-	import type { PageData } from './$types';
+	import { searchOpenLibrary, type OpenLibrarySearchResult } from '$lib/open-library';
+	import type { ShelfLookupResponse } from '../../api/shelf/lookup/+server';
 
-	let { data }: { data: PageData } = $props();
+	type SearchResultView = OpenLibrarySearchResult & {
+		onShelf: boolean;
+		shelfEntryId: string | null;
+		rating: number | null;
+	};
 
+	let results = $state<SearchResultView[]>([]);
+	let isLoading = $state(false);
+	let loadError = $state<string | null>(null);
 	let pendingOpenLibraryId = $state<string | null>(null);
 	let feedbackMessage = $state<{ tone: 'success' | 'error'; text: string } | null>(null);
+
+	const query = $derived(page.url.searchParams.get('query')?.trim() ?? '');
+
+	const enrichWithShelf = async (
+		items: OpenLibrarySearchResult[],
+		signal: AbortSignal
+	): Promise<SearchResultView[]> => {
+		if (items.length === 0) return [];
+
+		const ids = items.map((item) => item.openLibraryId).join(',');
+		try {
+			const response = await fetch(`/api/shelf/lookup?openLibraryIds=${encodeURIComponent(ids)}`, {
+				signal
+			});
+			if (!response.ok) {
+				return items.map((item) => ({
+					...item,
+					onShelf: false,
+					shelfEntryId: null,
+					rating: null
+				}));
+			}
+			const payload = (await response.json()) as ShelfLookupResponse;
+			return items.map((item) => {
+				const match = payload.entries[item.openLibraryId] ?? null;
+				return {
+					...item,
+					onShelf: match !== null,
+					shelfEntryId: match?.shelfEntryId ?? null,
+					rating: match?.rating ?? null
+				};
+			});
+		} catch (error) {
+			if (error instanceof DOMException && error.name === 'AbortError') throw error;
+			return items.map((item) => ({
+				...item,
+				onShelf: false,
+				shelfEntryId: null,
+				rating: null
+			}));
+		}
+	};
+
+	$effect(() => {
+		const currentQuery = query;
+		if (!currentQuery) {
+			results = [];
+			loadError = null;
+			return;
+		}
+
+		const controller = new AbortController();
+		isLoading = true;
+		loadError = null;
+
+		(async () => {
+			try {
+				const upstream = await searchOpenLibrary(currentQuery, { signal: controller.signal });
+				if (controller.signal.aborted) return;
+				const enriched = await enrichWithShelf(upstream, controller.signal);
+				if (controller.signal.aborted) return;
+				results = enriched;
+			} catch (error: unknown) {
+				if (error instanceof DOMException && error.name === 'AbortError') return;
+				loadError = error instanceof Error ? error.message : 'Search failed.';
+				results = [];
+			} finally {
+				if (!controller.signal.aborted) isLoading = false;
+			}
+		})();
+
+		return () => controller.abort();
+	});
+
+	const refetchShelfStatus = async () => {
+		if (results.length === 0) return;
+		const controller = new AbortController();
+		const refreshed = await enrichWithShelf(
+			results.map(({ openLibraryId, title, author, description, publishedYear }) => ({
+				openLibraryId,
+				title,
+				author,
+				description,
+				publishedYear
+			})),
+			controller.signal
+		);
+		results = refreshed;
+	};
 
 	const handleAddToShelf = async (
 		openLibraryId: string,
@@ -35,7 +132,7 @@
 				return;
 			}
 			feedbackMessage = { tone: 'success', text: `Added ${title} to your shelf.` };
-			await invalidateAll();
+			await refetchShelfStatus();
 		} catch {
 			feedbackMessage = { tone: 'error', text: 'Network error while adding to shelf.' };
 		} finally {
@@ -56,7 +153,7 @@
 			<Input
 				label="Search by title, author, or ISBN"
 				name="query"
-				value={data.query}
+				value={query}
 				placeholder="Try Station Eleven or Susanna Clarke"
 			/>
 			<div class="self-end">
@@ -80,27 +177,36 @@
 		</div>
 	{/if}
 
-	{#if !data.query}
+	{#if loadError}
+		<div
+			role="alert"
+			class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+		>
+			{loadError}
+		</div>
+	{:else if !query}
 		<EmptyState
 			title="Ready when you are."
 			message="Type a title or author and we'll look it up in the Open Library catalog."
 		/>
-	{:else if data.results.length === 0}
+	{:else if isLoading}
+		<EmptyState title="Searching…" message={`Looking up “${query}” in the Open Library catalog.`} />
+	{:else if results.length === 0}
 		<EmptyState
 			title="No matches"
-			message={`We could not find anything matching “${data.query}”. Try another query.`}
+			message={`We could not find anything matching “${query}”. Try another query.`}
 		/>
 	{:else}
 		<section class="space-y-4">
 			<div class="flex items-center justify-between gap-3">
 				<h2 class="font-display text-3xl text-(--color-ink)">Search results</h2>
 				<p class="text-sm text-(--color-muted)">
-					{data.results.length} result{data.results.length === 1 ? '' : 's'}
+					{results.length} result{results.length === 1 ? '' : 's'}
 				</p>
 			</div>
 
 			<ul class="space-y-5">
-				{#each data.results as result (result.openLibraryId)}
+				{#each results as result (result.openLibraryId)}
 					<li>
 						<article
 							aria-label={`${result.title} by ${result.author}`}
