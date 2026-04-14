@@ -1,27 +1,12 @@
-import bookSeedData from '../data/books.json';
-import shelfEntrySeedData from '../data/shelf-entries.json';
-import userSeedData from '../data/users.json';
+
 import type { BookSummary, UserSummary } from '../../src/lib/server/db';
+import * as data from '../data';
 
 export type SeedResult = {
 	reader: UserSummary;
 	admin: UserSummary;
 	books: BookSummary[];
 };
-
-const [reader, admin] = userSeedData;
-
-if (!reader || !admin) {
-	throw new Error('Expected tests/data/users.json to include the reader and admin users');
-}
-
-export const seeded = {
-	users: userSeedData,
-	books: bookSeedData,
-	shelfEntries: shelfEntrySeedData,
-	reader,
-	admin
-} as const;
 
 const notImplemented = (functionName: string): never => {
 	throw new Error(
