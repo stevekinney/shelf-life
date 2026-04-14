@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { onMount } from 'svelte';
 	import Button from '$lib/components/button.svelte';
 	import Input from '$lib/components/input.svelte';
 	import PageHeader from '$lib/components/page-header.svelte';
@@ -33,7 +34,7 @@
 		}, 500);
 	};
 
-	$effect(() => {
+	onMount(() => {
 		const timer = setTimeout(() => {
 			contentLoaded = true;
 		}, 1000);
@@ -135,7 +136,7 @@
 				<h3 class="text-sm font-semibold text-(--color-ink)">Partial match</h3>
 				<div class="mt-3 space-y-2 text-sm text-(--color-ink)">
 					<p>Currently reading Station Eleven by Emily St. John Mandel.</p>
-					<p>Station Eleven has been on your shelf for 42 days.</p>
+					<p>This book has been on your shelf for 42 days.</p>
 					<p>Add Station Eleven to your shelf to keep it handy.</p>
 				</div>
 			</section>
@@ -143,6 +144,7 @@
 			<section class="rounded-(--radius-control) bg-(--color-surface-soft) p-4">
 				<h3 class="text-sm font-semibold text-(--color-ink)">Disambiguation</h3>
 				<div class="mt-3 space-y-2 text-sm text-(--color-ink)">
+					<p>3 of 12 books finished</p>
 					<p>You have 4 books on your shelf right now.</p>
 					<p>You finished 4 books this year.</p>
 					<p>4 books are waiting for a rating.</p>
@@ -449,15 +451,9 @@
 	>
 		<div class="space-y-4">
 			<!-- A div pretending to be a button (intentional anti-pattern for teaching) -->
+			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 			<div
-				role="button"
-				tabindex="0"
 				onclick={() => {}}
-				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.currentTarget?.click();
-					}
-				}}
 				class="inline-flex cursor-pointer items-center rounded-full bg-(--color-accent) px-4 py-2 text-sm font-semibold text-white hover:bg-(--color-accent-strong)"
 				data-testid="fake-button"
 			>
@@ -483,11 +479,11 @@
 				/>
 			</div>
 
-			<!-- An icon-only button with proper accessible name -->
+			<!-- An icon-only button with no accessible name -->
+			<!-- svelte-ignore a11y_consider_explicit_label -->
 			<button
 				class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--color-border-strong) bg-(--color-surface) hover:bg-(--color-surface-soft)"
 				data-testid="icon-only-button"
-				aria-label="icon-only button with no accessible name"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"

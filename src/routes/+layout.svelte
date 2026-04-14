@@ -5,12 +5,11 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import type { LayoutData } from './$types';
-	import type { Pathname } from '$app/types';
 
 	let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
 
-	const titles: Partial<Record<Pathname, string>> = {
-		'/': 'Shelf',
+	const titles: Record<string, string> = {
+		'/': 'Home',
 		'/login': 'Sign in',
 		'/search': 'Search',
 		'/shelf': 'Your shelf',
@@ -20,10 +19,9 @@
 		'/playground': 'Locator playground'
 	};
 
-	const title = $derived(titles[page.url.pathname as keyof typeof titles] ?? 'Shelf');
+	const title = $derived(titles[page.url.pathname] ?? 'Shelf');
 
-	const baseLinkClasses =
-		'rounded-(--radius-control) px-3 py-2 text-sm font-medium transition';
+	const baseLinkClasses = 'rounded-(--radius-control) px-3 py-2 text-sm font-medium transition';
 	const activeLinkClasses = 'bg-(--color-surface-soft) text-(--color-ink)';
 	const inactiveLinkClasses = 'text-(--color-muted) hover:bg-white/60 hover:text-(--color-ink)';
 
