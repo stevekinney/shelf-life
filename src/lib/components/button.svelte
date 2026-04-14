@@ -10,6 +10,7 @@
 	type PagePathname =
 		| '/'
 		| '/login'
+		| '/admin'
 		| '/design-system'
 		| '/playground'
 		| '/search'

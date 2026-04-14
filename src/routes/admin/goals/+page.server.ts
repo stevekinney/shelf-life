@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { requireAdministrator } from '$lib/server/authorization';
 import { createLoginPath } from '$lib/authentication-navigation';
-import { getAdministratorGoalSummary } from '$lib/server/reading-goals';
+import { getAdminGoalDashboardData } from '$lib/server/admin';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -11,7 +11,5 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	requireAdministrator(locals.user);
 
 	const year = new Date().getUTCFullYear();
-	const summary = await getAdministratorGoalSummary(year);
-
-	return { user: locals.user, summary };
+	return getAdminGoalDashboardData(year);
 };

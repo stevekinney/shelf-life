@@ -3,7 +3,13 @@ import type { Cookies } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, session } from '$lib/server/db/schema';
 import { verifyPassword } from '$lib/server/password';
-import { createUser, findUserByEmail } from '$lib/server/users';
+import {
+	createUser,
+	findUserByEmail,
+	listUsers,
+	publicUserColumns,
+	type PublicUser
+} from '$lib/server/users';
 import { eq, and, gt } from 'drizzle-orm';
 
 const COOKIE_NAME = 'shelf_session';
@@ -36,7 +42,8 @@ export async function signUp(
 	const existing = await findUserByEmail(email);
 	if (existing) throw new Error('An account with that email already exists.');
 
-	const newUser = await createUser({ name, email, password });
+	const isFirstUser = (await listUsers()).length === 0;
+	const newUser = await createUser({ name, email, password, isAdmin: isFirstUser });
 
 	await createSession(newUser.id, cookies);
 }
@@ -61,10 +68,10 @@ export async function signOut(cookies: Cookies): Promise<void> {
 
 export async function getSessionUser(
 	token: string
-): Promise<{ user: typeof user.$inferSelect; session: typeof session.$inferSelect } | null> {
+): Promise<{ user: PublicUser; session: typeof session.$inferSelect } | null> {
 	const now = new Date();
 	const [row] = await db
-		.select()
+		.select({ session, user: publicUserColumns })
 		.from(session)
 		.innerJoin(user, eq(session.userId, user.id))
 		.where(and(eq(session.token, token), gt(session.expiresAt, now)))

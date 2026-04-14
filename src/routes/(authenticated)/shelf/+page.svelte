@@ -134,7 +134,6 @@
 
 <div class="space-y-8">
 	<PageHeader
-		eyebrow="Protected app surface"
 		title={data.user?.name ? `${data.user.name}'s shelf` : 'Your shelf'}
 		description="Your reading list, with status and ratings."
 	/>

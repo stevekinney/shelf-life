@@ -3,7 +3,6 @@
 	import Button from '$lib/components/button.svelte';
 	import PageHeader from '$lib/components/page-header.svelte';
 	import SurfaceCard from '$lib/components/surface-card.svelte';
-	import { featuredBooks } from '$lib/sample-books';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -116,7 +115,7 @@
 		</div>
 
 		<div class="grid gap-5 lg:grid-cols-3">
-			{#each featuredBooks as book (book.id)}
+			{#each data.featuredBooks as book (book.id)}
 				<BookCard {book} />
 			{/each}
 		</div>

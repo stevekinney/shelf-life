@@ -8,7 +8,6 @@
 
 <div class="space-y-8">
 	<PageHeader
-		eyebrow="Administrator view"
 		title={`Reading goals · ${data.summary.year}`}
 		description="Aggregate progress across every reader with an account this year."
 	/>

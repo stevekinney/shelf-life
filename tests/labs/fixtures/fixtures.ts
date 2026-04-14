@@ -61,9 +61,9 @@ export const test = base.extend<LabFixtures>({
 	// navigation. No teardown. No justification for why it's a fixture
 	// instead of a `beforeEach`.
 	authedPage: async ({ page }, use) => {
-		// The `labs-fixtures` project already mounts storage state, so the
-		// page is already authenticated when we get here. But this fixture
-		// pretends to do the work anyway, which is the exact confusion the
+		// By the time this lab runs, you should already have some authenticated
+		// default Playwright setup for protected Shelf pages. This fixture
+		// pretends to do that work anyway, which is the exact confusion the
 		// lesson is trying to prevent.
 		await page.goto('/shelf');
 		await expect(page).toHaveURL(/\/shelf/);
@@ -77,7 +77,8 @@ export const test = base.extend<LabFixtures>({
 		await use(fresh);
 		// Teardown exists, which is good — but the fixture itself is
 		// helper-shaped: one test uses it, it's awkward to compose, and it
-		// fights the project-level storageState.
+		// fights the authenticated default browser state you already set up
+		// for the lab run.
 		await context.close();
 	}
 });

@@ -10,6 +10,7 @@
 
 	const titles: Record<string, string> = {
 		'/': 'Home',
+		'/admin': 'Admin',
 		'/login': 'Sign in',
 		'/search': 'Search',
 		'/shelf': 'Your shelf',
@@ -102,6 +103,17 @@
 						>
 							Goals
 						</a>
+						{#if data.user.isAdmin}
+							<a
+								class={[
+									baseLinkClasses,
+									isCurrentPath('/admin') ? activeLinkClasses : inactiveLinkClasses
+								]}
+								href={resolve('/admin')}
+							>
+								Admin
+							</a>
+						{/if}
 					{/if}
 				</nav>
 			</div>

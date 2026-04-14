@@ -1,7 +1,5 @@
-import { eq } from 'drizzle-orm';
-import { error, json } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { book } from '$lib/server/db/schema';
+import { json } from '@sveltejs/kit';
+import { getAdminDashboardData, updateFeaturedBook } from '$lib/server/admin';
 import { requireAdministrator } from '$lib/server/authorization';
 import type { RequestHandler } from './$types';
 
@@ -17,7 +15,7 @@ type FeatureBookBody = {
 };
 
 export const POST: RequestHandler = async ({ locals, request }) => {
-	requireAdministrator(locals.user);
+	const currentUser = requireAdministrator(locals.user);
 
 	let body: FeatureBookBody;
 	try {
@@ -33,32 +31,55 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 	const rawPosition = body.position;
 	if (rawPosition !== null && rawPosition !== undefined) {
-		if (typeof rawPosition !== 'number' || !Number.isInteger(rawPosition) || rawPosition < 0) {
-			return json({ error: 'position must be null or a non-negative integer' }, { status: 400 });
+		if (typeof rawPosition !== 'number' || !Number.isInteger(rawPosition) || rawPosition < 1) {
+			return json({ error: 'position must be null or an integer starting at 1' }, { status: 400 });
 		}
 	}
 
-	const [target] = await db
-		.select()
-		.from(book)
-		.where(eq(book.openLibraryId, openLibraryId))
-		.limit(1);
-
-	if (!target) {
-		error(404, 'Book not found');
-	}
-
-	await db
-		.update(book)
-		.set({ featuredPosition: rawPosition ?? null })
-		.where(eq(book.id, target.id));
+	const updated = await updateFeaturedBook(openLibraryId, rawPosition ?? null);
 
 	return json({
 		ok: true,
 		book: {
-			id: target.id,
-			openLibraryId: target.openLibraryId,
-			featuredPosition: rawPosition ?? null
+			id: updated.id,
+			openLibraryId: updated.openLibraryId,
+			title: updated.title,
+			featuredPosition: updated.featuredPosition
+		},
+		featuredBooks: (await getAdminDashboardData(currentUser.id)).featuredBooks
+	});
+};
+
+export const PUT = POST;
+
+export const GET: RequestHandler = async ({ locals }) => {
+	const currentUser = requireAdministrator(locals.user);
+	const dashboard = await getAdminDashboardData(currentUser.id);
+
+	return json({
+		books: dashboard.books,
+		featuredBooks: dashboard.featuredBooks,
+		summary: dashboard.summary
+	});
+};
+
+export const DELETE: RequestHandler = async ({ locals, url }) => {
+	requireAdministrator(locals.user);
+
+	const openLibraryId = url.searchParams.get('openLibraryId')?.trim();
+	if (!openLibraryId) {
+		return json({ error: 'openLibraryId is required' }, { status: 400 });
+	}
+
+	const updated = await updateFeaturedBook(openLibraryId, null);
+
+	return json({
+		ok: true,
+		book: {
+			id: updated.id,
+			openLibraryId: updated.openLibraryId,
+			title: updated.title,
+			featuredPosition: updated.featuredPosition
 		}
 	});
 };
