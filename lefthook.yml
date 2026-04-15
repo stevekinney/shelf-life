@@ -1,0 +1,4 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - run: npm test
