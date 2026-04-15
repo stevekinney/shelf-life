@@ -1,8 +1,19 @@
 {
-	"servers": {
-		"svelte": {
-			"command": "npx",
-			"args": ["-y", "@sveltejs/mcp"]
-		}
-	}
+  "servers": {
+    "svelte": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@sveltejs/mcp"
+      ]
+    },
+    "playwright-test": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "run-test-mcp-server"
+      ]
+    }
+  }
 }
